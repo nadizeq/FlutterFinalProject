@@ -1,3 +1,4 @@
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -40,10 +41,11 @@ class CreatePostPageState extends State<CreatePostPageApp>{
 
   @override
   void initState(){
+    super.initState();
     _txtTitle.addListener(_enableORdisableBtn);
     _txtDesc.addListener(_enableORdisableBtn);
     _txtImageUrl.addListener(_enableORdisableBtn);
-    super.initState();
+    BackButtonInterceptor.removeAll();
   }
 
   //the function below with either disable or enable the button to work
@@ -61,7 +63,7 @@ class CreatePostPageState extends State<CreatePostPageApp>{
 
   void _sendMessage(){
     if(_txtTitle.text.isNotEmpty && _txtDesc.text.isNotEmpty && _txtImageUrl.text.isNotEmpty){
-      channel.sink.add('{"type":"create_post","data":{"title":"$_txtTitle.text","description":"$_txtDesc.text","image":"$_txtImageUrl.text"}}');
+      channel.sink.add('{"type":"create_post","data":{"title":"$_txtTitle.text.toString()","description":"$_txtDesc.text.toString()","image":"$_txtImageUrl.text.toString()"}}');
       //checkConnect();
     }
   }

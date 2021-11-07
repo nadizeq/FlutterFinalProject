@@ -8,7 +8,7 @@ import 'favourite.dart';
 import 'main.dart';
 
 class PostPageApp extends StatefulWidget{
-  PostPageApp ({required this.channel,
+  const PostPageApp ({required this.channel,
   Key? key}) : super(key:key);
 
 
@@ -24,6 +24,8 @@ class PostPageState extends State<PostPageApp>{
   PostPageState(this.channel);
   WebSocketChannel channel;
   Color _originalFavColor = Colors.black;
+
+  
  
 
   
@@ -34,6 +36,8 @@ class PostPageState extends State<PostPageApp>{
   String textImage = "";
   String statusIcon = "false";
   String textID = "";
+  List _allpost = [];
+  //List _postFav = [];
 
    @override
   initState() {
@@ -42,6 +46,7 @@ class PostPageState extends State<PostPageApp>{
       decodedResults = jsonDecode(results);
       if(decodedResults['type'] == 'all_posts') {
         _post = decodedResults['data']['posts'];
+        _allpost = _post;
       }
       setState(() {
       });
@@ -89,13 +94,14 @@ class PostPageState extends State<PostPageApp>{
         
         Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => MyApp()));
+              MaterialPageRoute(builder: (context) => const MyApp()));
       }else{
         //code here
       }
 
     });
 }
+
   @override
   Widget build(BuildContext context) {
 
@@ -160,12 +166,54 @@ class PostPageState extends State<PostPageApp>{
           ),
         
           child: ListView.builder(
-            itemCount: _post.length,
+            itemCount: _post.length+1,
             itemBuilder: (context,index){
 
-              return Column(
+              return index == 0 ? _searchBar() : _listItem(index-1);
+
+          })
+
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: (){
+          Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CreatePostPageApp(channel: channel,)));
+        },
+        ),
+    )
+    );
+
+
+  }
+  _searchBar(){
+    return Padding(padding: EdgeInsets.all(8.0),
+    child: TextField(
+      decoration: const InputDecoration(
+        hintText: 'Search by title...',
+      ),
+      onChanged: (text){
+        //so that search result can display the title even though user enter lowercase
+        text = text.toLowerCase();
+        setState(() {
+          _post = _allpost.where((e){
+            var postTitle = e["title"].toLowerCase();
+            return postTitle.contains(text);
+          }).toList();
+        });
+        
+      },
+      onEditingComplete: (){
+        FocusScope.of(context).unfocus();
+      },
+    ),
+    );
+  }
+    _listItem(index){
+      return Column(
             children: [
-              pad10,
+              const Padding(padding: EdgeInsets.all(10)),
               Card(
               elevation: 5,
               margin: const EdgeInsets.symmetric(
@@ -200,7 +248,7 @@ class PostPageState extends State<PostPageApp>{
                               
                               ),
                               ),
-                              pad5,
+                              const Padding(padding: EdgeInsets.all(5)),
                               Padding(padding: const EdgeInsets.only(left: 20,right:8),
                               child: Text(_post[index]["description"],
                               style: const TextStyle(
@@ -211,7 +259,7 @@ class PostPageState extends State<PostPageApp>{
                               maxLines: 3,
                               ),
                               ),
-                              pad5,
+                              const Padding(padding: EdgeInsets.all(5)),
                               Padding(padding: const EdgeInsets.only(left: 20,right:8),
                               child: Text(_post[index]["date"],
                               style: const TextStyle(
@@ -251,11 +299,12 @@ class PostPageState extends State<PostPageApp>{
                                     }, icon: const Icon(
                                       Icons.delete_sharp)
                                   ),
-                                  pad10,
+                                  const Padding(padding: EdgeInsets.all(10)),
                                   IconButton(
                                     color: _originalFavColor,
                                     onPressed: (){
                                       setState(() {
+                                        //_postFav.add(_post[index]);
                                         textID = _post[index]["_id"];
                                       print(textID);
                                       
@@ -307,22 +356,7 @@ class PostPageState extends State<PostPageApp>{
 
               
           ],);
-
-          })
-
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: (){
-          Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => CreatePostPageApp(channel: channel,)));
-        },
-        ),
-    )
-    );
-  }
-
+    }
 }
 
 
@@ -330,6 +364,7 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
       ),

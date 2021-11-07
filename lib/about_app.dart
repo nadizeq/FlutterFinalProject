@@ -16,8 +16,16 @@ class AboutPageState extends State<AboutPageApp>{
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Center(child: Text('Settings'),)
+        title: const Center(
+          child: Text('Information'),
+        ),
+        leading: IconButton(
+        icon: Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
       ),
+        ),
       body: SettingsList(
         sections: [
           SettingsSection(
@@ -28,7 +36,7 @@ class AboutPageState extends State<AboutPageApp>{
 
               SettingsTile(
                 title: 'Introduction',
-                subtitle: 'This app can return the list, adding post (in progress) and view post detail (in progress)',
+                subtitle: 'This app can return the list, adding post and view post detail. Sorting function is not available yet',
                 subtitleMaxLines: 2,
                 leading: const Icon(Icons.language),
                 onPressed: (BuildContext context) {},
@@ -39,7 +47,8 @@ class AboutPageState extends State<AboutPageApp>{
                 leading: Icon(Icons.person),
                 
               ),
-              SettingsTile.switchTile(
+
+              /*SettingsTile.switchTile(
                 title: 'Use System Theme',
                 leading: const Icon(Icons.phone_android),
                 switchValue: isSwitched,
@@ -48,7 +57,7 @@ class AboutPageState extends State<AboutPageApp>{
                     isSwitched = value;
                   });
                 },
-              ),
+              ),*/
             ],
           ),
           

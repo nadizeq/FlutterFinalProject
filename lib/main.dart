@@ -2,9 +2,10 @@ import 'package:finalflutterproject/post.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'create_post.dart';
 import 'dear_feature/dear_feature_display_name.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:back_button_interceptor/back_button_interceptor.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -48,8 +49,15 @@ class _MyHomePageState extends State<MyHomePage> {
   
   @override
   void initState(){
-    myController.addListener(_enableORdisableBtn);
     super.initState();
+    myController.addListener(_enableORdisableBtn);
+    BackButtonInterceptor.add(myInterceptor);
+  }
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    // ignore: avoid_print
+    print("BACK BUTTON!"); // Do some stuff.
+    return true;
   }
 
   void _enableORdisableBtn(){
@@ -76,6 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose (){
     myController.dispose();
     _channel.sink.close();
+    BackButtonInterceptor.remove(myInterceptor);
     super.dispose();
   }
 
