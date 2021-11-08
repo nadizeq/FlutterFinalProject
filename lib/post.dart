@@ -20,15 +20,16 @@ class PostPageApp extends StatefulWidget{
   }
 }
 
-class PostPageState extends State<PostPageApp>{
+class PostPageState extends State<PostPageApp> with SingleTickerProviderStateMixin{
 
   PostPageState(this.channel);
   WebSocketChannel channel;
   Color _originalFavColor = Colors.black;
 
   
- 
-
+  late Animation <double> animation;
+  late AnimationController animController;
+  bool isForward = false;
   
   dynamic decodedResults;
   List _post = [];
@@ -53,6 +54,17 @@ class PostPageState extends State<PostPageApp>{
       });
     });
     _getPost();
+    animController = AnimationController(
+      duration: Duration(milliseconds: 1000),vsync: this
+    );
+
+    final curvedAnimation = CurvedAnimation(parent: animController, curve: Curves.easeOutExpo);
+
+    animation = Tween<double>(begin: 0, end: 150).animate(curvedAnimation)..addListener(() {
+      setState(() {
+        
+      });
+    });
   }
 
   Future<void> refresh() async {
@@ -206,7 +218,7 @@ class PostPageState extends State<PostPageApp>{
             itemCount: _post.length+1,
             itemBuilder: (context,index){
 
-              return index == 0 ? _searchBar() : _listItem(index-1);
+              return index == 0 ? _animatedSearchBar() : _listItem(index-1);
 
           })
 
@@ -225,44 +237,73 @@ class PostPageState extends State<PostPageApp>{
 
   }
 
-  bool _folded = true;
+  
 
   _animatedSearchBar(){
-    return AnimatedContainer(duration: Duration(milliseconds: 400),
-    width: _folded ? 56:200,
-    height: 56,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(32),
-      color: Colors.white,
-      boxShadow: kElevationToShadow[6],
-    ),
-    child: Row(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Expanded(child: Container(
-          padding: EdgeInsets.only(left: 16),
-          child: _folded ? TextField(decoration: InputDecoration(
-            hintText: 'Search by title...',
-            hintStyle: TextStyle(color: Colors.blue[300],),border: InputBorder.none
+        Padding(padding: EdgeInsets.only(top:2)),
+        Container(
+          width: animation.value,
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(50),
+              bottomLeft: Radius.circular(50)
+            )
           ),
-          ):null
-          ,)),
-          AnimatedContainer(duration: Duration(milliseconds: 400),
-          child: InkWell(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Icon(Icons.search,color: Colors.blue[900],
-          ),
+          child: Padding(padding: const EdgeInsets.only(left: 20,bottom: 5),
+          child: TextField(
+            cursorColor: Colors.black,
+            style: TextStyle(color: Colors.black),
+            decoration: InputDecoration(border: InputBorder.none),
+            onChanged: (text){
+        //so that search result can display the title even though user enter lowercase
+        text = text.toLowerCase();
+        setState(() {
+          _post = _allpost.where((e){
+            var postTitle = e["title"].toLowerCase();
+            return postTitle.contains(text);
+          }).toList();
+        });
+        
+      },
+      onEditingComplete: (){
+        FocusScope.of(context).unfocus();
+      },
             ),
-          onTap: (){
-            setState(() {
-              _folded = !_folded;
-            });
+          ),
+        ),
+        Container(width: 50,height: 50,
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: animation.value > 1 ?  const BorderRadius.only(
+            topLeft: Radius.circular(0),
+            bottomLeft: Radius.circular(0),
+            bottomRight: Radius.circular(50),
+            topRight: Radius.circular(50),
+          ): BorderRadius.circular(10),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(0),
+          child: IconButton(
+            icon: Icon(isForward ? Icons.close
+            : Icons.search,
+          color: Colors.blue.shade900,),
+          onPressed: (){
+            if(!isForward){
+              animController.forward();
+              isForward = true;
+            }else{
+              animController.reverse();
+              isForward = false;
+            }
           },
           ),
-          
-          )
+        ),)
       ],
-    ),
     );
   }
   _searchBar(){
