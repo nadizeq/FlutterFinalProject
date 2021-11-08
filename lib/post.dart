@@ -6,6 +6,7 @@ import 'about_app.dart';
 import 'create_post.dart';
 import 'favourite.dart';
 import 'main.dart';
+import 'dart:math' as math;
 
 class PostPageApp extends StatefulWidget{
   const PostPageApp ({required this.channel,
@@ -37,7 +38,7 @@ class PostPageState extends State<PostPageApp>{
   String statusIcon = "false";
   String textID = "";
   List _allpost = [];
-  //List _postFav = [];
+  List _postFav = [];
 
    @override
   initState() {
@@ -53,6 +54,17 @@ class PostPageState extends State<PostPageApp>{
     });
     _getPost();
   }
+
+  Future<void> refresh() async {
+    setState(() {
+      _getPost();
+      _postFav.clear();
+    });
+  }
+
+  //check icon value
+  bool isClicked = false;
+  bool sortisClicked = false;
 
 //"limit":10
 
@@ -108,12 +120,14 @@ class PostPageState extends State<PostPageApp>{
     Padding pad10 = const Padding(padding: EdgeInsets.all(10),);
 
     Padding pad5 = const Padding(padding: EdgeInsets.all(5),);
-    
+    //reverse a list
+    var reverseList = _post.reversed.toList();
+
     return WillPopScope(onWillPop:() async => false,
     child: Scaffold(
       resizeToAvoidBottomInset: false,
       appBar:AppBar(
-        
+        automaticallyImplyLeading: false,
         title: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -121,21 +135,14 @@ class PostPageState extends State<PostPageApp>{
             
             const Text('Exercise 2'),
             IconButton(
-              icon: const Icon(Icons.sort_by_alpha),
-              onPressed: (){
-                // ignore: avoid_print
-                print('sort is clicked');
-              },
-            ),
-            IconButton(
               icon: const Icon(Icons.favorite),
               color: Colors.red,
               onPressed: (){
                 // ignore: avoid_print
                 print('favourite is clicked');
-                Navigator.push(
+              Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => FavouritePageApp()));
+              MaterialPageRoute(builder: (context) => FavouritePageApp(channel: channel, postfavlist: _postFav)));
 
               },
             ),
@@ -150,7 +157,37 @@ class PostPageState extends State<PostPageApp>{
           ],
         ),
         ),
-        
+
+        actions: sortisClicked == false?
+        <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: IconButton(icon: const Icon(Icons.sort_by_alpha),onPressed: (){
+              setState(() {
+                _post = reverseList.toList();
+                sortisClicked = true;
+              });
+            },
+            ),
+          )
+        ]
+        :<Widget>[
+          //Icon(Icons.rotate_left, size: 100,),
+          Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.rotationY(math.pi),
+          child: Padding(padding: const EdgeInsets.only(right: 10),
+          child: IconButton(icon: const Icon(Icons.sort_by_alpha),
+          onPressed: (){
+            setState(() {
+              _post = reverseList.toList();
+              sortisClicked = false;
+            });
+          },),
+          ),
+          ),
+          
+        ],
       ),
       body: Container(
 
@@ -186,6 +223,47 @@ class PostPageState extends State<PostPageApp>{
     );
 
 
+  }
+
+  bool _folded = true;
+
+  _animatedSearchBar(){
+    return AnimatedContainer(duration: Duration(milliseconds: 400),
+    width: _folded ? 56:200,
+    height: 56,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(32),
+      color: Colors.white,
+      boxShadow: kElevationToShadow[6],
+    ),
+    child: Row(
+      children: [
+        Expanded(child: Container(
+          padding: EdgeInsets.only(left: 16),
+          child: _folded ? TextField(decoration: InputDecoration(
+            hintText: 'Search by title...',
+            hintStyle: TextStyle(color: Colors.blue[300],),border: InputBorder.none
+          ),
+          ):null
+          ,)),
+          AnimatedContainer(duration: Duration(milliseconds: 400),
+          child: InkWell(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Icon(Icons.search,color: Colors.blue[900],
+          ),
+            ),
+          onTap: (){
+            setState(() {
+              _folded = !_folded;
+            });
+          },
+          ),
+          
+          )
+      ],
+    ),
+    );
   }
   _searchBar(){
     return Padding(padding: EdgeInsets.all(8.0),
@@ -229,7 +307,13 @@ class PostPageState extends State<PostPageApp>{
                       Container(
                         width: 100,
                         height: 100,
-                        child: Image.network("${_post[index]["image"]}",errorBuilder: (_1,_2,_3){return SizedBox.shrink();},),
+                        child: Image.network("${_post[index]["image"]}",errorBuilder: (BuildContext context,
+                                  Object exception, StackTrace? stackTrace) {
+                                return Container(
+                                    width: 100,
+                                    height: 100,
+                                    child: Image.asset('images/404.png'));
+                              },),
                         //fit: BoxFit.fill,),
                       ),
                       Expanded(
@@ -284,45 +368,44 @@ class PostPageState extends State<PostPageApp>{
 
                             Expanded(child: Container(
                               padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
+                              child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   IconButton(
+                                    
                                     onPressed: (){
 
                                       textID = _post[index]["_id"];
-                                      print(textID);
-                                      widget.channel.sink.add('{"type":"delete_post","data":{"postId": "$textID"}}');
-
                                       
-                                    }, icon: const Icon(
+                                      widget.channel.sink.add('{"type":"delete_post","data":{"postId": "$textID"}}');
+                                    }, 
+                                    icon: const Icon(
                                       Icons.delete_sharp)
                                   ),
-                                  const Padding(padding: EdgeInsets.all(10)),
-                                  IconButton(
-                                    color: _originalFavColor,
-                                    onPressed: (){
+
+                                  Padding(padding: EdgeInsets.all(10),
+                                  child: ElevatedButton(
+                                    
+                                    onPressed: _postFav.contains(_post[index])?(){
                                       setState(() {
-                                        //_postFav.add(_post[index]);
-                                        textID = _post[index]["_id"];
-                                      print(textID);
-                                      
-                                      if (_post[index]["_id"] == textID){
-                                        if(_originalFavColor == Colors.black){
-                                        _originalFavColor = Colors.red;
-                                      }
-
-                                      else{
-                                        _originalFavColor = Colors.black;
-                                      }
-                                      }
-
-                                      
+                                        _postFav.remove(_postFav[index]);
                                       });
-                                    }, icon: const Icon(
-                                      Icons.favorite)
-                                  ),
+                                    }:(){
+                                      _postFav.add(_post[index]);
+                                    }, 
+                                    child: _postFav.contains(_post[index])? 
+                                     const Icon(
+                                      Icons.favorite,
+                                      color: Colors.red,
+                                    ) :  const Icon(
+                                      Icons.favorite,
+                                      color: Colors.black,)
+                                    ),
+                                    ),
+
+                                  const Padding(padding: EdgeInsets.all(10)),
+                                  
                                 ],
                               ),
                               )
@@ -336,8 +419,6 @@ class PostPageState extends State<PostPageApp>{
                     textDescription = _post[index]["description"];
                     textImage = _post[index]["image"];
                     
-
-                    print(_post[index]["image"]);
                     Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => PostDetailPageApp(getTitle: textTitle,

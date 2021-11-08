@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:back_button_interceptor/back_button_interceptor.dart';
+import 'package:finalflutterproject/post.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -62,10 +65,16 @@ class CreatePostPageState extends State<CreatePostPageApp>{
   }
 
   void _sendMessage(){
-    if(_txtTitle.text.isNotEmpty && _txtDesc.text.isNotEmpty && _txtImageUrl.text.isNotEmpty){
-      channel.sink.add('{"type":"create_post","data":{"title":"$_txtTitle.text.toString()","description":"$_txtDesc.text.toString()","image":"$_txtImageUrl.text.toString()"}}');
+    final String checkTitle = _txtTitle.text;
+    final String checkDesc = _txtDesc.text;
+    final String checkImage = _txtImageUrl.text;
+
+    if(_txtTitle.text != '' && _txtDesc.text != '' && _txtImageUrl.text != ''){
+      channel.sink.add('{"type":"create_post","data":{"title":"${checkTitle}","description":"${checkDesc}","image":"${checkImage}"}}');
       //checkConnect();
     }
+
+    //print(checkImage);
   }
 
   @override
@@ -132,7 +141,8 @@ class CreatePostPageState extends State<CreatePostPageApp>{
               decoration: const InputDecoration(
                 hintText: 'Enter description for this post',
                 border: OutlineInputBorder(),
-                 icon: Icon(Icons.description_outlined),),
+                 icon: Icon(Icons.description_outlined),
+                 ),
             ),
             pad10,
             const Text('Image link:',
@@ -171,8 +181,9 @@ class CreatePostPageState extends State<CreatePostPageApp>{
                 Expanded(
                   child: OutlinedButton(onPressed: !_validateUsrInput? null : (){
                     if(_validateUsrInput){
-                        print('Hello');
+                      
                       _sendMessage();
+                      Navigator.of(context).pop();
                       
                     }
                   }, child: const Text('Submit Post',

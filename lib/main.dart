@@ -1,7 +1,10 @@
+// import 'dart:convert';
+
 import 'package:finalflutterproject/post.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'about_app.dart';
 import 'dear_feature/dear_feature_display_name.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:back_button_interceptor/back_button_interceptor.dart';
@@ -73,9 +76,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _sendMessage(){
-    if(myController.text.isNotEmpty){
-      _channel.sink.add('{ "type": "sign_in", "data": {"name": "$myController.text"}}');
-
+    final String authorName = myController.text;
+    if(myController.text != ''){
+      _channel.sink.add('{ "type": "sign_in", "data": {"name": "${authorName}"}}');
       //checkConnect();
     }
   }
@@ -174,14 +177,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         context,
                         MaterialPageRoute(builder: (context) => PostPageApp(channel: _channel)),
                         );
-
-                        /*Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => CreatePostPageApp(channel: _channel)),
-                        );*/
-                      /*Navigator.push(
-                      context,MaterialPageRoute(builder: (context) => PostPage()),
-                      );*/
                       }
                     },
                     style: OutlinedButton.styleFrom(
